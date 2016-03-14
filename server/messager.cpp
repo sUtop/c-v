@@ -8,18 +8,31 @@ std::atomic<std::uint16_t> request;
 
 void senderThread()
 {
-    MessageSender ms(8888);
-    const std::chrono::nanoseconds sleep_time(10);
+    const std::chrono::milliseconds sleep_time(10);
+    try {
+        while(1) {
+            if(request != 0) {
 
-    // Цыкл прослушивания
-    while(1) {
-        if(request) {
-            std::uint16_t tmp = request;
-            request = 0;
-            ms.send(tmp);
-        }
-        else std::this_thread::sleep_for(sleep_time);
+            MessageSender ms(8888);
+
+            // Цыкл прослушивания
+            while(1) {
+                if(request) {
+//                        std::cout << "request in work" << request << "\n";
+                        std::uint16_t tmp = request;
+                        request = 0;
+                        ms.send(tmp);
+                    }
+//                    else std::this_thread::sleep_for(sleep_time);
+                }
+            }
+            else std::this_thread::sleep_for(sleep_time);
+        };
     }
+    catch(std::string str) {
+        std::cout << "catched " << str << "\n";
+    }
+
 
 }
 
@@ -37,25 +50,44 @@ MessageSender::MessageSender(std::uint16_t PORT)
     if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
         throw (std::string("socket") );
 
-    si_me->sin_family = AF_INET;
-    si_me->sin_port = htons(PORT);
-    si_me->sin_addr.s_addr = htonl(INADDR_ANY);
+    si_other->sin_family = AF_INET;
+    si_other->sin_port = htons(PORT);
+//    si_other->sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Открытие DNS-соединения на чтение на сокете по порту
-    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
-        throw (std::string("bind") );
+    //!< Bind для получения информации открывает клиент !!
+//    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
+ //       throw (std::string("bind") );
+
+    std::int16_t buf[1];
+
+
+    std::cout << "MessageSender  listening \n";
 
     // Полученние рукопожатия ? блокирует конструктор до начала соединения (заполняется si_other)
-    if(( recv_len = recvfrom(socetHandler,
-                             buf,
-                             BUFLEN,
-                             0,
-                             (struct sockaddr *) si_other,
-                             &slen)
-         ) == -1)
-        throw (std::string("recvfrom") );
 
-    std::cout << "MessageSender " << buf << "\n";
+    std::uint16_t buff = 404;
+
+    sendto(
+                  socetHandler, // socet
+                  &buff, // *buff
+                  2, // len_data
+                  0, // ?
+                  (struct sockaddr*) si_other, // Адрес клиента
+                  slen);
+
+//    if(( recv_len = recvfrom(socetHandler,
+//                             buf,
+//                             2,
+//                             0,
+//                             (struct sockaddr *) si_other,
+//                             &slen)
+//         ) == -1)
+//        throw (std::string("recvfrom") );
+
+//    if(buf[0] != 404) throw(-1);
+
+//    std::cout << "MessageSender " << buf[0] << "\n";
 
 //    
 //    if(sendto(
@@ -74,27 +106,12 @@ MessageSender::MessageSender(std::uint16_t PORT)
 
 void MessageSender::send(std::uint16_t &c)
 {
-    // Попытка получить данные, блокирующий вызов
-    //        if ((recv_len = recvfrom(socetHandler, buf, BUFLEN, 0, (struct sockaddr *) si_other, &slen)) == -1)
-    //            throw(std::string("recvfrom"));
-
     int tmp = c;
 
     msgGenerator->genLine(tmp);
     recv_len = sizeof (Line );
-    // Отправка пакета обратно
 
-
-    /* Send N bytes of BUF on socket FD to peer at address ADDR (which is
-       ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.
-
-       This function is a cancellation point and therefore not marked with
-       __THROW.  */
-    //extern ssize_t sendto (int __fd, const void *__buf, size_t __n,
-    //		       int __flags, __CONST_SOCKADDR_ARG __addr,
-    //		       socklen_t __addr_len);
-    //
-
+    // Отправка пакета
     if(sendto(
               socetHandler, // socet
               &( msgGenerator->data[tmp] ), // *buff
@@ -104,6 +121,8 @@ void MessageSender::send(std::uint16_t &c)
               slen)
        == -1)
         throw (std::string("sendto") );
+
+//    std::cout << "sended " << c << "\n";
 }
 
 MessageSender::~MessageSender()
@@ -113,19 +132,25 @@ MessageSender::~MessageSender()
 
 void receiverThread()
 {
+    try {
     MessageClient mr(7777);
 
-    const std::chrono::nanoseconds sleep_time(10);
+//    const std::chrono::milliseconds sleep_time(1);
     while(1) {
 
         std::uint16_t tmp = mr.receive();
         if(tmp > 720) tmp %= 720;
         request = tmp;
 
-        std::cout << "request geted  =  " << request << "\n";
-        std::this_thread::sleep_for(sleep_time);
+//        std::cout << "request geted  =  " << request << "\n";
+//        std::this_thread::sleep_for(sleep_time);
 
     }
+    }
+    catch(std::string str) {
+        std::cout << "catched " << str << "\n";
+    }
+
 
 }
 

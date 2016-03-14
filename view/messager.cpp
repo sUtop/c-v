@@ -2,56 +2,40 @@
 #include "view.h" // Для печати данных
 
 
-MessageClient * ms = nullptr; //!< Класс для работы с сетью
+MessageClient * ms = new MessageClient(8888); //!< Класс для работы с сетью
 
 std::array<Line, global_width> * data = nullptr;
 
-#include <random>
-
-//class Generator {
-//    //    std::random_device rd;
-//    std::mt19937 * generator;
-//    std::uniform_int_distribution<std::int8_t> * dis;
-//
-//public:
-//
-//    Generator(std::int8_t seed, std::int8_t min, std::int8_t max)
-//    {
-//        generator = new std::mt19937(seed);
-//        dis = new std::uniform_int_distribution<std::int8_t>( min, max );
-//    }
-//
-//    std::int8_t gen()
-//    {
-//        return (*dis )( *generator );
-//    }
-//};
-
-//Generator RanGen(0, 200, 255);
-
 void messageClientThread()
 {
-    MessageClient mc(8888);
+    try {
+//    MessageClient mc(8888);
 
-    ms = &mc;
+        ms->init();
+//    ms = &mc;
 
-//    const std::chrono::nanoseconds sleep_time(10);
     while(1) {
-        //        for(int i = 0; i < 720 * 576 * 4; ++i) {
-        //            pixels[i] = RanGen.gen();
-        //        }
 
-        mc.getOnce();
+        ms->getOnce();
         //        std::this_thread::sleep_for(sleep_time);
 
     };
+    }
+    catch(std::string str) {
+        std::cout << "catched " << str << "\n";
+    }
+
 
 
 };
 
 MessageClient::MessageClient(std::uint16_t PORT)
 {
+    m_PORT = PORT;
+}
 
+void MessageClient::init()
+{
     m_finish = false;
     si_me = new sockaddr_in();
     si_other = new sockaddr_in();
@@ -62,52 +46,59 @@ MessageClient::MessageClient(std::uint16_t PORT)
     if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
         throw (std::string("socket") );
 
-    si_other->sin_family = AF_INET;
-    si_other->sin_port = htons(PORT);
+    si_me->sin_family = AF_INET;
+    si_me->sin_port = htons(m_PORT);
 
-    si_other->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    si_me->sin_addr.s_addr = htonl(INADDR_ANY);
 
-    // #define SERVER "127.0.0.1"
-    //    if (inet_aton(SERVER, &si_other->sin_addr) == 0)
-    //        throw(std::string("inet_aton"));
+
+
+    //!< Bind для получения информации открывает клиент !!
+    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
+        throw (std::string("bind") );
+
+    std::uint16_t buff;
+    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
+
+    if(buff != 404) throw(std::string("wtf" + std::to_string(buff)));
+    else std::cout << " Correct handshake ! \n";
 
 }
 
 void MessageClient::getOnce()
 {
 
-    Line * buf;
-    if(recvfrom(socetHandler, buf, sizeof (Line), 0, (struct sockaddr *) si_other, &slen) == -1)
-        throw (std::string("MessageClient::getOnce\n") );
-
-    // if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1)
-
-    //    if(sendto(socetHandler, &message, sizeof (std::uint16_t ), 0, (struct sockaddr *) si_other, slen) == -1)
+    Line buf;
+    int i = recvfrom(socetHandler, &buf, sizeof (Line), 0, (struct sockaddr *) si_other, &slen);
+    if(i == -1) {
+        std::cout << "geted " << i << " " << errno << "\n";
+        return;
+    }
     
-    std::cout << " Geted               MessageClient   " << buf->number << "\n";
+//    std::cout << " Geted               MessageClient   " << buf.number << " " << buf.reserv <<"\n";
 
     //  char * pixels = new char[720 * 576 * 4]; // 4 - байта в каждом пикселе - rgba
     //    PixelARGB argb[576]; // Данные о цвете       [2304 байт]
 
-    if(buf->reserv == 100) {
+    if(buf.reserv == 100) {
         //        data->at(buf->number);
         for(int i = 0; i < 576; ++i) {
-            pixels[720 * 4 * buf->number + i] = buf->argb[i].A;
-            pixels[720 * 4 * buf->number + i + 1] = buf->argb[i].R;
-            pixels[720 * 4 * buf->number + i + 2] = buf->argb[i].G;
-            pixels[720 * 4 * buf->number + i + 3] = buf->argb[i].B;
+            pixels[575 * buf.number * 4 + i] = buf.argb[i].A;
+            pixels[575 * buf.number * 4 + i + 1] = buf.argb[i].R;
+            pixels[575 * buf.number * 4 + i + 2] = buf.argb[i].G;
+            pixels[575 * buf.number * 4 + i + 3] = buf.argb[i].B;
         }
-        if(buf->number > 700)
+        if(buf.number >= 718)
             m_finish = true;
         
         
         
     };
 
-    delete buf;
+//    delete buf;
     
     if(m_finish) {
-        std::cout << " !!!!!     ==================================================       !!!!!!!!!!!\n";
+//        std::cout << " !!!!!     ==================================================       !!!!!!!!!!!\n";
         sendSignal();
         m_finish = false;
     }
@@ -121,17 +112,26 @@ void MessageClient::sendSignal()
 
 void messageAnswerThread()
 {
+
+    try {
     MessageAnswer ma(7777);
-    const std::chrono::nanoseconds sleep_time(100);
+//    const std::chrono::milliseconds sleep_time(100);
 
 
     while(1) {
         for(std::uint16_t i = 0; i < global_width; ++i) {
             ma.send(i);
-            std::this_thread::sleep_for(sleep_time);
+//            std::this_thread::sleep_for(sleep_time);
         }
 
     }
+
+    }
+    catch(std::string str) {
+        std::cout << "catched " << str << "\n";
+    }
+
+
     //          Пересылка запросов
 };
 

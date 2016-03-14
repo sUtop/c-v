@@ -23,11 +23,10 @@ class MessageSender {
     int socetHandler, //! ID сокета
     recv_len; //! Количество полученных байт
 
-
     Generator * msgGenerator;
     //#define BUFLEN 512  //  Длинна буффера - нужно 576 * 5 - одна строка
-    static const int BUFLEN = 576 * 5;
-    char buf[BUFLEN]; //! Временное хранилище
+//    static const int BUFLEN = 576 * 5;
+//    char buf[BUFLEN]; //! Временное хранилище
 
     socklen_t slen; //! socklen_t - структура для хранения размер адреса
 

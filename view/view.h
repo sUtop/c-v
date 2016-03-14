@@ -1,6 +1,7 @@
 #ifndef VIEW_H
 #define VIEW_H
 
+#include <array>
 
 struct PixelARGB {
     // 1 байт для каждого элемента структуры
@@ -38,11 +39,5 @@ extern std::array<Line, global_width> * data;
 
 extern char * pixels; //!< Указатель на заполненную структуру пикселей
 extern MessageClient * ms; //!< Класс для работы с сетью
-
-
-//#include <atomic>
-//! Указатель на признак заполнения - устанавливается в messager
-//! сбрасывается в widget в слоте updateGl
-//std::atomic_bool * ab;
 
 #endif

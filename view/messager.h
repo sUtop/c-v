@@ -7,12 +7,12 @@
 #include <atomic>
 #include <iostream>
 
-void messageClientThread();
-
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<unistd.h>
 
+
+void messageClientThread();
 
 //! Класс для получения сообщений
 //! метод run - запускает метод loop в отдельном потоке
@@ -36,10 +36,13 @@ class MessageClient : public QObject {
     bool m_finish;
     socklen_t slen; //! socklen_t - структура для хранения размер адреса
 
+    std::uint16_t m_PORT;
+
 public:
     MessageClient(std::uint16_t PORT);
     void getOnce();
 
+    void init();
     void sendSignal();
 signals:
     void getMessage();
@@ -69,9 +72,6 @@ public:
 
 };
 
-//void loop(MessageClient *ms);
 void run_msg();
-
-
 
 #endif
