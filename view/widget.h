@@ -17,6 +17,8 @@ class Widget : public QGLWidget {
 
     std::time_t m_lastTime; //!< последнее время замера фпс
     std::int8_t m_frames; //!< подсчет количества фпс
+    GLsizei width = 720, 
+            height = 576;
 public:
     Widget(QWidget *parent = 0);
 protected:

@@ -4,10 +4,10 @@
 #include <qobject.h>
 // ? qobject ? <- 
 #include <thread>
+#include <atomic>
+#include <iostream>
 
 void messageClientThread();
-
-
 
 #include<arpa/inet.h>
 #include<sys/socket.h>
@@ -30,14 +30,15 @@ class MessageClient : public QObject {
     int socetHandler, //! ID сокета
     recv_len; //! Количество полученных байт
 
-    static const int BUFLEN = 512;
-    char buf[BUFLEN]; //! Временное хранилище
+//    static const int BUFLEN = 512;
+//    char buf[BUFLEN]; //! Временное хранилище
 
+    bool m_finish;
     socklen_t slen; //! socklen_t - структура для хранения размер адреса
 
 public:
     MessageClient(std::uint16_t PORT);
-    void run();
+    void getOnce();
 
     void sendSignal();
 signals:
@@ -45,8 +46,10 @@ signals:
 
 };
 
+
+void messageAnswerThread();
+
 class MessageAnswer {
-    struct sockaddr_in * si_me; //!< Переменная для открытия соединения
     struct sockaddr_in * si_other; //!< Переменная для получения/отправки сообщений
     int socetHandler, //! ID сокета
     recv_len; //! Количество полученных байт
@@ -59,14 +62,12 @@ class MessageAnswer {
 public:
     MessageAnswer(std::uint16_t PORT);
 
-    void send(int &);
+    void send(std::uint16_t & message);
     void get();
-    
+
     ~MessageAnswer();
 
 };
-
-
 
 //void loop(MessageClient *ms);
 void run_msg();
@@ -74,5 +75,3 @@ void run_msg();
 
 
 #endif
-
-

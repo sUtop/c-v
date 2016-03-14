@@ -4,7 +4,7 @@
 Widget::Widget(QWidget *parent)
 : QGLWidget(parent)
 {
-    resize(600, 600);
+    resize(720, 576);
     connect(ms, SIGNAL(getMessage()), this, SLOT(updateGL()));
 
 }
@@ -51,8 +51,6 @@ void Widget::paintGL() // рисование
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    GLint x, y;
-    GLsizei width = 720, height = 576;
     /* DataType
     #define GL_BYTE                           0x1400
     #define GL_UNSIGNED_BYTE                  0x1401
@@ -69,11 +67,9 @@ void Widget::paintGL() // рисование
 
     glColorMask(true, true, true, false);
     GLenum format = GL_RGBA, type = GL_UNSIGNED_BYTE; //GL_UNSIGNED_SHORT_4_4_4_4;
-    //    GLvoid
-    //    char * pixels = new char[720 * 576 * 4];
 
 
-    //    glReadPixels (x, y, width, height, format, type, pixels);
+//        glReadPixels (x, y, width, height, format, type, pixels);
     glDrawPixels(width, height, format, type, pixels);
 
     glColorMask(true, true, true, true);

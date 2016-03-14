@@ -20,9 +20,18 @@ void run_form(int argc, char** argv)
 int main(int argc, char** argv)
 {
 
+    data = new std::array<Line, global_width>();
+    
+    std::cout << "Started \n";
     std::thread mcThread(messageClientThread);
     mcThread.detach();
 
+    std::cout << " mcThread Started \n";
+    std::thread maThread(messageAnswerThread);
+    maThread.detach();
+
+    std::cout << " maThread Started \n";
+    
     run_form(argc, argv);
 
     //    run_msg();

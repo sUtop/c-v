@@ -52,8 +52,8 @@ class MessageClient {
     int socetHandler, //! ID сокета
     recv_len; //! Количество полученных байт
 
-    static const int BUFLEN = 1;
-    std::uint16_t buf[BUFLEN]; //! Временное хранилище
+//    static const int BUFLEN = 2;
+    std::uint16_t buf; //! Временное хранилище
 
     socklen_t slen; //! socklen_t - структура для хранения размер адреса
 

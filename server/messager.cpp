@@ -25,10 +25,9 @@ void senderThread()
 
 MessageSender::MessageSender(std::uint16_t PORT)
 {
-    
+
     msgGenerator = new Generator(0, 200, 255);
 
-    
     si_me = new sockaddr_in();
     si_other = new sockaddr_in();
 
@@ -43,14 +42,31 @@ MessageSender::MessageSender(std::uint16_t PORT)
     si_me->sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Открытие DNS-соединения на чтение на сокете по порту
-        if( bind(socetHandler , (struct sockaddr*)si_me, sizeof(sockaddr_in) ) == -1)
-            throw(std::string("bind"));
+    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
+        throw (std::string("bind") );
 
     // Полученние рукопожатия ? блокирует конструктор до начала соединения (заполняется si_other)
-    if(( recv_len = recvfrom(socetHandler, buf, BUFLEN, 0, (struct sockaddr *) si_other, &slen) ) == -1)
+    if(( recv_len = recvfrom(socetHandler,
+                             buf,
+                             BUFLEN,
+                             0,
+                             (struct sockaddr *) si_other,
+                             &slen)
+         ) == -1)
         throw (std::string("recvfrom") );
-    
+
     std::cout << "MessageSender " << buf << "\n";
+
+//    
+//    if(sendto(
+//              socetHandler, // socet
+//              &( msgGenerator->data.at(tmp) ), // *buff
+//              recv_len, // len_data
+//              0, // ?
+//              (struct sockaddr*) si_other, // Адрес клиента
+//              slen)
+//       == -1)
+    
     
 }
 
@@ -63,25 +79,25 @@ void MessageSender::send(std::uint16_t &c)
     //            throw(std::string("recvfrom"));
 
     int tmp = c;
-    
-    msgGenerator->genLine(tmp);
-    recv_len = sizeof (Line);
-    // Отправка пакета обратно
-    
-    
-/* Send N bytes of BUF on socket FD to peer at address ADDR (which is
-   ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.
 
-   This function is a cancellation point and therefore not marked with
-   __THROW.  */
-//extern ssize_t sendto (int __fd, const void *__buf, size_t __n,
-//		       int __flags, __CONST_SOCKADDR_ARG __addr,
-//		       socklen_t __addr_len);
-//
-    
+    msgGenerator->genLine(tmp);
+    recv_len = sizeof (Line );
+    // Отправка пакета обратно
+
+
+    /* Send N bytes of BUF on socket FD to peer at address ADDR (which is
+       ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.
+
+       This function is a cancellation point and therefore not marked with
+       __THROW.  */
+    //extern ssize_t sendto (int __fd, const void *__buf, size_t __n,
+    //		       int __flags, __CONST_SOCKADDR_ARG __addr,
+    //		       socklen_t __addr_len);
+    //
+
     if(sendto(
               socetHandler, // socet
-              &( msgGenerator->data.at(tmp) ), // *buff
+              &( msgGenerator->data[tmp] ), // *buff
               recv_len, // len_data
               0, // ?
               (struct sockaddr*) si_other, // Адрес клиента
@@ -102,10 +118,13 @@ void receiverThread()
     const std::chrono::nanoseconds sleep_time(10);
     while(1) {
 
-        request = mr.receive();
+        std::uint16_t tmp = mr.receive();
+        if(tmp > 720) tmp %= 720;
+        request = tmp;
+
         std::cout << "request geted  =  " << request << "\n";
         std::this_thread::sleep_for(sleep_time);
-        
+
     }
 
 }
@@ -133,12 +152,10 @@ MessageClient::MessageClient(std::uint16_t PORT)
 std::uint16_t MessageClient::receive()
 {
     // Попытка получить данные, блокирующий вызов, блокировка до получения данных
-    if(( recv_len = recvfrom(socetHandler, buf, BUFLEN, 0, (struct sockaddr *) si_other, &slen) ) == -1)
+    if(( recv_len = recvfrom(socetHandler, &buf, sizeof (std::uint16_t ), 0, (struct sockaddr *) si_other, &slen) ) == -1)
         throw (std::string("recvfrom") );
 
-    std::cout << "MessageClient " << buf[0] << "\n";
-
-    return buf[0];
+    return buf;
 
 }
 
