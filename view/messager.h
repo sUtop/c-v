@@ -21,17 +21,10 @@ void messageClientThread();
 class MessageClient : public QObject {
     Q_OBJECT
 
-    //    std::thread * m_thread;
-    //   static void loop();
-
-    // sockaddr_in - описывает сокет для работы с протоколами IP
     struct sockaddr_in * si_me; //!< Переменная для открытия соединения
     struct sockaddr_in * si_other; //!< Переменная для получения/отправки сообщений
     int socetHandler, //! ID сокета
     recv_len; //! Количество полученных байт
-
-//    static const int BUFLEN = 512;
-//    char buf[BUFLEN]; //! Временное хранилище
 
     bool m_finish;
     socklen_t slen; //! socklen_t - структура для хранения размер адреса

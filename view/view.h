@@ -19,7 +19,7 @@ struct Line {
     std::uint8_t depth[576]; // Глубина          [576  байт]
     std::uint16_t number; // Индекс строки       [2    байта]
     std::uint16_t reserv; // Выравнивание        [2    байта]
-                         // Итого                [2884 байт]
+                          // Итого               [2884 байт]
 
     void clear() {
         for (int i = 0; i < 576; ++i) {

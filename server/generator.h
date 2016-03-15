@@ -15,7 +15,7 @@ struct PixelARGB {
     };
 };
 
-
+//!< TODO Вынести константу вовне!
 struct Line {
     PixelARGB argb[576];    // Данные о цвете       [2304 байт]
     std::uint8_t depth[576];// Глубина              [576  байт]
@@ -40,14 +40,15 @@ struct Line {
 class Generator {
     //    std::random_device rd;
     std::mt19937 * generator;
-    std::uniform_int_distribution<std::int8_t> * dis;
+    std::uniform_int_distribution<std::uint8_t> * dis;
 
     static const int width = 720;
     static const int height = 576;
 
     std::int8_t gen();
 
-    PixelARGB & genPix();
+    void genPix(PixelARGB &p);
+//    PixelARGB & genPix();
 
     inline int ijToarray(int i, int j) {
         return i * height + j;
@@ -66,7 +67,7 @@ public:
     int m_height;
 
 
-    Generator(std::int8_t seed, std::int8_t min, std::int8_t max);
+    Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max);
 
     void gen(int i, int j);
 
