@@ -8,8 +8,6 @@ char * pixels = new char[720 * 576 * 4]; // 4 - байта в каждом пи�
 int main(int argc, char** argv)
 {
     try {
-        data = new std::array<Line, global_width>( );
-
         std::cout << "Started \n";
         std::thread mcThread(messageClientThread);
         std::thread maThread(messageAnswerThread);

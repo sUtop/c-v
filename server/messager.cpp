@@ -8,7 +8,7 @@ std::atomic<std::uint16_t> request;
 
 void senderThread()
 {
-    const std::chrono::milliseconds sleep_time(10);
+    const std::chrono::nanoseconds sleep_time(10);
     try {
         while(1) {
             if(request != 0) {
@@ -21,8 +21,8 @@ void senderThread()
                         std::uint16_t tmp = request;
                         request = 0;
                         ms.send(tmp);
-                    } 
-                    else std::this_thread::sleep_for(sleep_time);                    
+                    }
+                    else std::this_thread::sleep_for(sleep_time);
                 }
             }
             else std::this_thread::sleep_for(sleep_time);
@@ -46,6 +46,7 @@ MessageSender::MessageSender(std::uint16_t PORT)
     m_socaddrOther = new sockaddr_in();
 
     m_socLen = sizeof (sockaddr_in );
+    m_recvLen = sizeof (Line );
 
     //Открытие UDP сокета
     if(( m_socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
@@ -76,14 +77,12 @@ void MessageSender::send(std::uint16_t &c)
 
     if(m_step <= 20)
         msgGenerator->genLine(tmp);
-    else {
-//        msgGenerator->genLine(tmp);
-        msgGenerator->m_data[tmp].clear();
-        msgGenerator->m_data[tmp].m_number = tmp;
-        msgGenerator->m_data[tmp].m_reserv = 100;
-        // Выводит черный экран ??
+    else { // от 20-го до 23-го шага
+            msgGenerator->m_data[tmp].clear();
+            msgGenerator->m_data[tmp].m_number = tmp;
+            msgGenerator->m_data[tmp].m_reserv = 100;
+        // Выводит черный экран
     }
-    m_recvLen = sizeof (Line );
 
     if(sendto(
               m_socetHandler, // socet
@@ -96,14 +95,21 @@ void MessageSender::send(std::uint16_t &c)
         throw (std::string("sendto") );
 
     ++m_lines; // !Увеличиваем количество отосланных 
-    if(m_lines >= 720 ) {
-        ++m_step;
+
+    // Если отослали один экран
+    if(m_lines >= 719) {
         m_lines = 0;
+
+        // Увеличиваем количество шагов
+        ++m_step;
+
+        // Если прошли 23 шага - сбрасываем
         if(m_step > 23)
             m_step = 0;
     }
-        
-    //    std::cout << "sended " << c << "\n";
+
+//    std::cout << " m_lines " << m_lines << " m_step " << m_step << "\n";
+
 }
 
 MessageSender::~MessageSender()

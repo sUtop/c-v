@@ -3,8 +3,6 @@
 
 MessageClient * ms = new MessageClient(8888); //!< Класс для работы с сетью
 
-std::array<Line, global_width> * data = nullptr;
-
 void messageClientThread()
 {
     try {
@@ -47,8 +45,8 @@ void MessageClient::init()
     std::uint16_t buff;
     recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
 
-    //    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
-    //    else std::cout << " Correct handshake ! \n";
+//    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
+//    else std::cout << " Correct handshake ! \n";
 
 }
 
@@ -62,22 +60,26 @@ void MessageClient::getOnce()
         return;
     }
 
-    if(buf.reserv == 100) {
+    if(buf.m_reserv == 100) { // Этой строкой проверяется корректность 
+        // полученного сообщения
         for(int i = 0; i < 576; ++i) {
-            // строка * количество байт на пиксель * строка + номер в строке * количество байт на пиксель
-            pixels[576 * 4 * buf.number + i * 4] = buf.argb[i].A;
-            pixels[576 * 4 * buf.number + i * 4 + 1] = buf.argb[i].R; // * 4 
-            pixels[576 * 4 * buf.number + i * 4 + 2] = buf.argb[i].G; // * 4 
-            pixels[576 * 4 * buf.number + i * 4 + 3] = buf.argb[i].B;
-            if(buf.number < 5 || buf.number > 718 )
-                std::cout << buf.number << "  = " << 576 * 4 * buf.number + i * 4 << 576 * 4 * buf.number + i * 4 + 1<< 576 * 4 * buf.number + i * 4  + 2 << 576 * 4 * buf.number + i * 4  + 3<< "\n";
+            // строка * количество байт на пиксель * строка + 
+            // номер в строке * количество байт на пиксель
+            pixels[576 * 4 * buf.m_number + i * 4] = buf.m_argb[i].m_A;
+            pixels[576 * 4 * buf.m_number + i * 4 + 1] = buf.m_argb[i].m_R; // * 4 
+            pixels[576 * 4 * buf.m_number + i * 4 + 2] = buf.m_argb[i].m_G; // * 4 
+            pixels[576 * 4 * buf.m_number + i * 4 + 3] = buf.m_argb[i].m_B;
         }
-        if(buf.number >= 718)
+        if(!m_finish && buf.m_number >= 700)
             m_finish = true;
 
     };
 
-    if(m_finish) {
+//        std::cout << "geted " << buf.m_number << " \n";
+
+    if(m_finish && buf.m_number <= 10) { 
+        // Отправляем запрос только на следующем проходе
+        // Так гарантируется корректность что пришел один экран.
         askToRedraw();
         m_finish = false;
     }
@@ -99,10 +101,10 @@ void messageAnswerThread()
 
     try {
         MessageAnswer ma(7777);
-        const std::chrono::nanoseconds sleep_time(1000);
+        const std::chrono::nanoseconds sleep_time(10);
 
         while(1) {
-            for(std::uint16_t i = 0; i < global_width; ++i) {
+            for(std::uint16_t i = 0; i < globalWidth; ++i) {
                 ma.send(i);
                 std::this_thread::sleep_for(sleep_time);
             }
