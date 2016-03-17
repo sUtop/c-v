@@ -21,7 +21,8 @@ void senderThread()
                         std::uint16_t tmp = request;
                         request = 0;
                         ms.send(tmp);
-                    }
+                    } 
+                    else std::this_thread::sleep_for(sleep_time);                    
                 }
             }
             else std::this_thread::sleep_for(sleep_time);
