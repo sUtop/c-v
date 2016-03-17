@@ -18,12 +18,10 @@ void senderThread()
                 // Цыкл прослушивания
                 while(1) {
                     if(request) {
-                        //                        std::cout << "request in work" << request << "\n";
                         std::uint16_t tmp = request;
                         request = 0;
                         ms.send(tmp);
                     }
-                    //                    else std::this_thread::sleep_for(sleep_time);
                 }
             }
             else std::this_thread::sleep_for(sleep_time);
@@ -38,20 +36,22 @@ void senderThread()
 
 MessageSender::MessageSender(std::uint16_t PORT)
 {
+    m_lines = 0;
+    m_step = 0;
 
-    msgGenerator = new Generator(0, 50, 255);
+    msgGenerator = new Generator(0, 0, 254);
 
-    si_me = new sockaddr_in();
-    si_other = new sockaddr_in();
+    m_socaddrMe = new sockaddr_in();
+    m_socaddrOther = new sockaddr_in();
 
-    slen = sizeof (sockaddr_in );
+    m_socLen = sizeof (sockaddr_in );
 
     //Открытие UDP сокета
-    if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
+    if(( m_socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
         throw (std::string("socket") );
 
-    si_other->sin_family = AF_INET;
-    si_other->sin_port = htons(PORT);
+    m_socaddrOther->sin_family = AF_INET;
+    m_socaddrOther->sin_port = htons(PORT);
     //    si_other->sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Открытие DNS-соединения на чтение на сокете по порту
@@ -61,37 +61,53 @@ MessageSender::MessageSender(std::uint16_t PORT)
     std::uint16_t buff = 404;
 
     sendto(
-           socetHandler, // socet
+           m_socetHandler, // socet
            &buff, // *buff
            2, // len_data
            0, // ?
-           (struct sockaddr*) si_other, // Адрес клиента
-           slen);
+           (struct sockaddr*) m_socaddrOther, // Адрес клиента
+           m_socLen);
 }
 
 void MessageSender::send(std::uint16_t &c)
 {
     int tmp = c;
 
-    msgGenerator->genLine(tmp);
-    recv_len = sizeof (Line );
+    if(m_step <= 20)
+        msgGenerator->genLine(tmp);
+    else {
+//        msgGenerator->genLine(tmp);
+        msgGenerator->m_data[tmp].clear();
+        msgGenerator->m_data[tmp].m_number = tmp;
+        msgGenerator->m_data[tmp].m_reserv = 100;
+        // Выводит черный экран ??
+    }
+    m_recvLen = sizeof (Line );
 
     if(sendto(
-              socetHandler, // socet
-              &( msgGenerator->data[tmp] ), // *buff
-              recv_len, // len_data
+              m_socetHandler, // socet
+              &( msgGenerator->m_data[tmp] ), // *buff
+              m_recvLen, // len_data
               0, // ?
-              (struct sockaddr*) si_other, // Адрес клиента
-              slen)
+              (struct sockaddr*) m_socaddrOther, // Адрес клиента
+              m_socLen)
        == -1)
         throw (std::string("sendto") );
 
+    ++m_lines; // !Увеличиваем количество отосланных 
+    if(m_lines >= 720 ) {
+        ++m_step;
+        m_lines = 0;
+        if(m_step > 23)
+            m_step = 0;
+    }
+        
     //    std::cout << "sended " << c << "\n";
 }
 
 MessageSender::~MessageSender()
 {
-    close(socetHandler);
+    close(m_socetHandler);
 }
 
 void receiverThread()
@@ -126,7 +142,7 @@ MessageClient::MessageClient(std::uint16_t PORT)
     slen = sizeof (sockaddr_in );
 
     //Открытие UDP сокета
-    if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
+    if(( m_socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
         throw (std::string("socket") );
 
     si_me->sin_family = AF_INET;
@@ -134,22 +150,22 @@ MessageClient::MessageClient(std::uint16_t PORT)
     si_me->sin_addr.s_addr = htonl(INADDR_ANY);
 
     // Открытие DNS-соединения на чтение на сокете по порту
-    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
+    if(bind(m_socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
         throw (std::string("bind") );
 }
 
 std::uint16_t MessageClient::receive()
 {
     // Попытка получить данные, блокирующий вызов, блокировка до получения данных
-    if(( recv_len = recvfrom(socetHandler, &buf, sizeof (std::uint16_t ), 0, (struct sockaddr *) si_other, &slen) ) == -1)
+    if(( m_recvLen = recvfrom(m_socetHandler, &m_buf, sizeof (std::uint16_t ), 0, (struct sockaddr *) si_other, &slen) ) == -1)
         throw (std::string("recvfrom") );
 
-    return buf;
+    return m_buf;
 
 }
 
 MessageClient::~MessageClient()
 {
-    close(socetHandler);
+    close(m_socetHandler);
 }
 

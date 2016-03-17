@@ -4,72 +4,55 @@
 #include <cstdint>
 #include <array>
 
+/* * 
+ * \brief PixelARGB Структура, описывающая один пиксель 
+ *  На каждый канал выделено по 1 байт для каждого элемента структуры
+ */
 struct PixelARGB {
-    // 1 байт для каждого элемента структуры
-    std::uint8_t A; // Альфа-канал
-    std::uint8_t R; //
-    std::uint8_t G;
-    std::uint8_t B;
+    std::uint8_t m_A; //!< Альфа-канал
+    std::uint8_t m_R; //!< Канал красного цвета 
+    std::uint8_t m_G; //!< Канал зеленого цвета
+    std::uint8_t m_B; //!< Канал голубого цвета
 
-    PixelARGB() : A(0), R(0), G(0), B(0) {
+    PixelARGB() : m_A(0), m_R(0), m_G(0), m_B(0) {
     };
 };
 
-//!< TODO Вынести константу вовне!
+
+/* * 
+ * \brief Line Структура, описывающая одну пересылаемую строчку данных
+ *  Содержит в себе строку пикселей, строку высот и индекс стоки
+ * !TODO Вынести константу вовне!
+ */
 struct Line {
-    PixelARGB argb[576];    // Данные о цвете       [2304 байт]
-    std::uint8_t depth[576];// Глубина              [576  байт]
-    std::uint16_t number;   // Индекс строки        [2    байта]
-    std::uint16_t reserv;   // Выравнивание         [2    байта]
-                            // Итого                [2884 байт]
-    void clear() {
-        for(int i = 0; i < 576; ++i) {
-            argb[i].A = 0;
-            argb[i].B = 0;
-            argb[i].G = 0;
-            argb[i].R = 0;
-            depth[i] = 0;
-        }
-        number = 0;
-        reserv = 0;
-    }
+    PixelARGB m_argb[576]; //!< Данные о цвете       [2304 байт]
+    std::uint8_t m_depth[576]; //!< Глубина          [576  байт]
+    std::uint16_t m_number; //!< Индекс строки       [2    байта]
+    std::uint16_t m_reserv; //!< Выравнивание        [2    байта]
+                            //!< Итого               [2884 байт]
+
+    void clear() ; //!< Последовательная очистка.
 };
 
 #include <random>
 
 class Generator {
-    //    std::random_device rd;
-    std::mt19937 * generator;
-    std::uniform_int_distribution<std::uint8_t> * dis;
+    std::mt19937 * m_generator;
+    std::uniform_int_distribution<std::uint8_t> * m_dis;
 
-    static const int width = 720;
-    static const int height = 576;
+    static const int mc_width = 720;
+    static const int mc_height = 576;
 
-    std::int8_t gen();
+    Line m_tmpLine;
 
-    void genPix(PixelARGB &p);
-//    PixelARGB & genPix();
+    std::int8_t gen(); //!< Генерация одного значения
+    void genPix(PixelARGB &p); //!< Генерация одного пикселя
 
-    inline int ijToarray(int i, int j) {
-        return i * height + j;
-    }
-
-    Line tmpLine;
 public:
-    std::array<PixelARGB, width * height> colors;
-    std::array<std::uint8_t, width * height> depth; //!< глубина
-
-    std::array<Line, width> data;
-    
-    // Переменные для полной генерации
-    int m_step;
-    int m_width;
-    int m_height;
-
+    std::array<Line, mc_width> m_data; 
+    //!< Хранилище пикселей. Хранит все строки 
 
     Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max);
-
-    void gen(int i, int j);
 
     void genLine(int i);
 };

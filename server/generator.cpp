@@ -1,38 +1,44 @@
 #include "generator.h"
 
-Generator::Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max)
+void Line::clear()
 {
-    generator = new std::mt19937(seed);
-    dis = new std::uniform_int_distribution<std::uint8_t>( min, max );
+    for(int i = 0; i < 576; ++i) {
+        m_argb[i].m_A = 0;
+        m_argb[i].m_B = 0;
+        m_argb[i].m_G = 0;
+        m_argb[i].m_R = 0;
+        m_depth[i] = 0;
+    }
+    m_number = 0;
+    m_reserv = 0;
 }
 
-void Generator::gen(int i, int j)
+Generator::Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max)
 {
-    int arr = ijToarray(i, j);
-    genPix(colors[arr]);
-    depth[arr] = gen();
+    m_generator = new std::mt19937(seed);
+    m_dis = new std::uniform_int_distribution<std::uint8_t>( min, max );
 }
 
 std::int8_t Generator::gen()
 {
-    return (*dis )( *generator );
+    return (*m_dis )( *m_generator );
 }
 
 void Generator::genPix(PixelARGB &p)
 {
-    p.A = gen();
-    p.R = gen();
-    p.G = gen();
-    p.B = gen();
+    p.m_A = gen();
+    p.m_R = gen();
+    p.m_G = gen();
+    p.m_B = gen();
 }
 
 void Generator::genLine(int iline)
 {
     for(int i = 0; i < 576; ++i) {
-        genPix(data[iline].argb[i]);
-        data[iline].depth[i] = gen();
+        genPix(m_data[iline].m_argb[i]);
+        m_data[iline].m_depth[i] = gen();
     }
-    data[iline].number = iline;
-    data[iline].reserv = 100; //Проверочная строка
+    m_data[iline].m_number = iline;
+    m_data[iline].m_reserv = 100; //Проверочная строка
 };
 

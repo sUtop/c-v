@@ -47,8 +47,8 @@ void MessageClient::init()
     std::uint16_t buff;
     recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
 
-    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
-    else std::cout << " Correct handshake ! \n";
+    //    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
+    //    else std::cout << " Correct handshake ! \n";
 
 }
 
@@ -64,10 +64,13 @@ void MessageClient::getOnce()
 
     if(buf.reserv == 100) {
         for(int i = 0; i < 576; ++i) {
-            pixels[575 * buf.number * 4 + i * 4] = buf.argb[i].A;
-            pixels[575 * buf.number * 4 + i * 4 + 1] = buf.argb[i].R;
-            pixels[575 * buf.number * 4 + i * 4 + 2] = buf.argb[i].G;
-            pixels[575 * buf.number * 4 + i * 4 + 3] = buf.argb[i].B;
+            // строка * количество байт на пиксель * строка + номер в строке * количество байт на пиксель
+            pixels[576 * 4 * buf.number + i * 4] = buf.argb[i].A;
+            pixels[576 * 4 * buf.number + i * 4 + 1] = buf.argb[i].R; // * 4 
+            pixels[576 * 4 * buf.number + i * 4 + 2] = buf.argb[i].G; // * 4 
+            pixels[576 * 4 * buf.number + i * 4 + 3] = buf.argb[i].B;
+            if(buf.number < 5 || buf.number > 718 )
+                std::cout << buf.number << "  = " << 576 * 4 * buf.number + i * 4 << 576 * 4 * buf.number + i * 4 + 1<< 576 * 4 * buf.number + i * 4  + 2 << 576 * 4 * buf.number + i * 4  + 3<< "\n";
         }
         if(buf.number >= 718)
             m_finish = true;
@@ -75,28 +78,33 @@ void MessageClient::getOnce()
     };
 
     if(m_finish) {
-        sendSignal();
+        askToRedraw();
         m_finish = false;
     }
 
 };
 
-void MessageClient::sendSignal()
+void MessageClient::askToRedraw()
 {
-    emit getMessage();
+    emit pixelsFull();
 }
+
+MessageClient::~MessageClient()
+{
+    close(socetHandler);
+};
 
 void messageAnswerThread()
 {
 
     try {
         MessageAnswer ma(7777);
-        //    const std::chrono::milliseconds sleep_time(100);
+        const std::chrono::nanoseconds sleep_time(1000);
 
         while(1) {
             for(std::uint16_t i = 0; i < global_width; ++i) {
                 ma.send(i);
-                //            std::this_thread::sleep_for(sleep_time);
+                std::this_thread::sleep_for(sleep_time);
             }
         }
     }

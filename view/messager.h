@@ -36,9 +36,10 @@ public:
     void getOnce();
 
     void init();
-    void sendSignal();
+    void askToRedraw();
+    ~MessageClient();
 signals:
-    void getMessage();
+    void pixelsFull();
 
 };
 
