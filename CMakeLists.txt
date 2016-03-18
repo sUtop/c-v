@@ -28,7 +28,7 @@ if (${U_SYSTEM} MATCHES "LINUX")
 elseif (${U_SYSTEM} MATCHES "DARWIN")
     add_definitions(-std=c++11 -g -pthread)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ldl -lpthread -pthread -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 elseif (${U_SYSTEM} MATCHES "WINDOWS")
 
@@ -42,6 +42,7 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Core)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
+find_package(Qt5Network)
 find_package(OpenGL)
 
 ###############  Подключение подпроекта server

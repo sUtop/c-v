@@ -1,15 +1,13 @@
 #ifndef MESSAGER_H
 #define MESSAGER_H
 
-#include <qobject.h>
-// ? qobject ? <- 
+#include <Qobject>
+#include <QtNetwork>
+
+
 #include <thread>
 #include <atomic>
 #include <iostream>
-
-#include<arpa/inet.h>
-#include<sys/socket.h>
-#include<unistd.h>
 
 
 void messageClientThread();
@@ -18,18 +16,12 @@ void messageClientThread();
 //! метод run - запускает метод loop в отдельном потоке
 //!
 
-class MessageClient : public QObject {
+class MessageClient : public QUdpSocket {
     Q_OBJECT
 
-    struct sockaddr_in * si_me; //!< Переменная для открытия соединения
-    struct sockaddr_in * si_other; //!< Переменная для получения/отправки сообщений
-    int socetHandler, //! ID сокета
-    recv_len; //! Количество полученных байт
-
     bool m_finish;
-    socklen_t slen; //! socklen_t - структура для хранения размер адреса
-
-    std::uint16_t m_PORT;
+    quint16 m_PORT;
+    QHostAddress * m_address;
 
 public:
     MessageClient(std::uint16_t PORT);
@@ -40,26 +32,26 @@ public:
     ~MessageClient();
 signals:
     void pixelsFull();
+public slots:
+    void read();
 
 };
 
 
 void messageAnswerThread();
 
-class MessageAnswer {
-    struct sockaddr_in * si_other; //!< Переменная для получения/отправки сообщений
-    int socetHandler, //! ID сокета
-    recv_len; //! Количество полученных байт
+class MessageAnswer : public QUdpSocket {
 
-    static const int BUFLEN = 4;
-    char buf[BUFLEN]; //! Временное хранилище
+    quint16 m_PORT;
 
-    socklen_t slen; //! socklen_t - структура для хранения размер адреса
+    QHostAddress * m_address;
+
+
 
 public:
     MessageAnswer(std::uint16_t PORT);
 
-    void send(std::uint16_t & message);
+    void send(const std::uint16_t message);
     void get();
 
     ~MessageAnswer();

@@ -1,14 +1,18 @@
 #include "messager.h"
 #include "view.h" // Для печати данных
 
-MessageClient * ms = new MessageClient(8888); //!< Класс для работы с сетью
+
+MessageClient * ms; //!< Класс для работы с сетью
 
 void messageClientThread()
 {
+    const std::chrono::nanoseconds sleep_time(10);
+    ms = new MessageClient(8888);
     try {
         ms->init();
         while(1) {
             ms->getOnce();
+          std::this_thread::sleep_for(sleep_time);
         };
     }
     catch(std::string str) {
@@ -23,42 +27,39 @@ MessageClient::MessageClient(std::uint16_t PORT)
 
 void MessageClient::init()
 {
-    m_finish = false;
-    si_me = new sockaddr_in();
-    si_other = new sockaddr_in();
 
-    slen = sizeof (sockaddr_in );
+    m_address = new QHostAddress(QHostAddress::LocalHost);
 
-    //Открытие UDP сокета
-    if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
-        throw (std::string("socket") );
+    std::cout << "bind return " << bind(*m_address,m_PORT) << "\n";
 
-    si_me->sin_family = AF_INET;
-    si_me->sin_port = htons(m_PORT);
-
-    si_me->sin_addr.s_addr = htonl(INADDR_ANY);
-
-    //!< Bind для получения информации открывает клиент !!
-    if(bind(socetHandler, (struct sockaddr*) si_me, sizeof (sockaddr_in )) == -1)
-        throw (std::string("bind") );
-
-    std::uint16_t buff;
-    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
-
-//    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
-//    else std::cout << " Correct handshake ! \n";
+    connect(this, SIGNAL(readyRead()), SLOT(read()));
 
 }
+
+void MessageClient::read() {
+    std::uint16_t buff;
+
+    std::cout << " handshake ! \n";
+
+    readDatagram((char *)&buff,2,m_address,&m_PORT);
+//    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
+
+    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
+    else std::cout << " Correct handshake ! \n";
+
+};
+
 
 void MessageClient::getOnce()
 {
 
     Line buf;
-    int i = recvfrom(socetHandler, &buf, sizeof (Line ), 0, (struct sockaddr *) si_other, &slen);
-    if(i == -1) {
-        std::cout << "geted " << i << " " << errno << "\n";
-        return;
-    }
+    int i = readDatagram((char *)&buf,sizeof (Line ),m_address,&m_PORT);;
+//    int i = recvfrom(socetHandler, &buf, sizeof (Line ), 0, (struct sockaddr *) si_other, &slen);
+//    if(i == -1) {
+//        std::cout << "geted " << i << " " << errno << "\n";
+//        return;
+//    }
 
     if(buf.m_reserv == 100) { // Этой строкой проверяется корректность 
         // полученного сообщения
@@ -74,8 +75,6 @@ void MessageClient::getOnce()
             m_finish = true;
 
     };
-
-//        std::cout << "geted " << buf.m_number << " \n";
 
     if(m_finish && buf.m_number <= 10) { 
         // Отправляем запрос только на следующем проходе
@@ -93,7 +92,7 @@ void MessageClient::askToRedraw()
 
 MessageClient::~MessageClient()
 {
-    close(socetHandler);
+    close();
 };
 
 void messageAnswerThread()
@@ -117,27 +116,21 @@ void messageAnswerThread()
 
 MessageAnswer::MessageAnswer(std::uint16_t PORT)
 {
-
-    si_other = new sockaddr_in();
-    slen = sizeof (sockaddr_in );
-
-    //Открытие UDP сокета
-    if(( socetHandler = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP) ) == -1)
-        throw (std::string("socket") );
-    si_other->sin_family = AF_INET;
-    si_other->sin_port = htons(PORT);
-    si_other->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    m_PORT = PORT;
 }
 
-void MessageAnswer::send(std::uint16_t & message)
+void MessageAnswer::send(const std::uint16_t message)
 {
-    if(sendto(socetHandler, &message, sizeof (std::uint16_t ), 0, (struct sockaddr *) si_other, slen) == -1)
-        throw (std::string("MessageAnswer::send") );
+                 writeDatagram(
+                     (const char *)(&message),
+                     sizeof (std::uint16_t ),
+                     QHostAddress::LocalHost,
+                     m_PORT);
 };
 
 MessageAnswer::~MessageAnswer()
 {
-    close(socetHandler);
+    close();
 
 }
 
