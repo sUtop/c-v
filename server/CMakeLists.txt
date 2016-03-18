@@ -1,7 +1,5 @@
 project(server)
 
-
-
 set(SERVER_SOURCES
     server.cpp
     messager.cpp
