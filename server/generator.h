@@ -18,7 +18,6 @@ struct PixelARGB {
     };
 };
 
-
 /* * 
  * \brief Line Структура, описывающая одну пересылаемую строчку данных
  *  Содержит в себе строку пикселей, строку высот и индекс стоки
@@ -29,9 +28,9 @@ struct Line {
     std::uint8_t m_depth[576]; //!< Глубина          [576  байт]
     std::uint16_t m_number; //!< Индекс строки       [2    байта]
     std::uint16_t m_reserv; //!< Выравнивание        [2    байта]
-                            //!< Итого               [2884 байт]
+    //!< Итого               [2884 байт]
 
-    void clear() ; //!< Последовательная очистка.
+    void clear(); //!< Последовательная очистка.
 };
 
 #include <random>
@@ -49,7 +48,7 @@ class Generator {
     void genPix(PixelARGB &p); //!< Генерация одного пикселя
 
 public:
-    std::array<Line, mc_width> m_data; 
+    std::array<Line, mc_width> m_data;
     //!< Хранилище пикселей. Хранит все строки 
 
     Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max);

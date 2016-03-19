@@ -30,9 +30,6 @@ protected:
     virtual void initializeGL() override;
     virtual void resizeGL(int nWidth, int nHeight) override;
     virtual void paintGL() override;
-
-//public slots:
-
 };
 
 #endif

@@ -5,8 +5,7 @@
 
 char * pixels = new char[720 * 576 * 4]; // 4 - байта в каждом пикселе - rgba // 2 - запас
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     try {
         std::cout << "Started \n";
         std::thread mcThread(messageClientThread);
@@ -24,8 +23,7 @@ int main(int argc, char** argv)
         MainApp.exec();
 
 
-    }
-    catch(std::string str) {
+    }    catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 

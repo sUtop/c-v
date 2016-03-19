@@ -4,33 +4,29 @@
 
 MessageClient * ms; //!< Класс для работы с сетью
 
-void messageClientThread()
-{
+void messageClientThread() {
     const std::chrono::nanoseconds sleep_time(10);
     ms = new MessageClient(8888);
     try {
         ms->init();
-        while(1) {
+        while (1) {
             ms->getOnce();
-          std::this_thread::sleep_for(sleep_time);
+            std::this_thread::sleep_for(sleep_time);
         };
-    }
-    catch(std::string str) {
+    }    catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 };
 
-MessageClient::MessageClient(std::uint16_t PORT)
-{
+MessageClient::MessageClient(std::uint16_t PORT) {
     m_PORT = PORT;
 }
 
-void MessageClient::init()
-{
+void MessageClient::init() {
 
     m_address = new QHostAddress(QHostAddress::LocalHost);
 
-    std::cout << "bind return " << bind(*m_address,m_PORT) << "\n";
+    std::cout << "bind return " << bind(*m_address, m_PORT) << "\n";
 
     connect(this, SIGNAL(readyRead()), SLOT(read()));
 
@@ -41,29 +37,22 @@ void MessageClient::read() {
 
     std::cout << " handshake ! \n";
 
-    readDatagram((char *)&buff,2,m_address,&m_PORT);
-//    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
+    readDatagram((char *) &buff, 2, m_address, &m_PORT);
+    //    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
 
-    if(buff != 404) throw (std::string("wtf" + std::to_string(buff)) );
+    if (buff != 404) throw (std::string("wtf" + std::to_string(buff)));
     else std::cout << " Correct handshake ! \n";
 
 };
 
-
-void MessageClient::getOnce()
-{
+void MessageClient::getOnce() {
 
     Line buf;
-    int i = readDatagram((char *)&buf,sizeof (Line ),m_address,&m_PORT);;
-//    int i = recvfrom(socetHandler, &buf, sizeof (Line ), 0, (struct sockaddr *) si_other, &slen);
-//    if(i == -1) {
-//        std::cout << "geted " << i << " " << errno << "\n";
-//        return;
-//    }
+    int i = readDatagram((char *) &buf, sizeof (Line), m_address, &m_PORT);
 
-    if(buf.m_reserv == 100) { // Этой строкой проверяется корректность 
+    if (buf.m_reserv == 100) { // Этой строкой проверяется корректность 
         // полученного сообщения
-        for(int i = 0; i < 576; ++i) {
+        for (int i = 0; i < 576; ++i) {
             // строка * количество байт на пиксель * строка + 
             // номер в строке * количество байт на пиксель
             pixels[576 * 4 * buf.m_number + i * 4] = buf.m_argb[i].m_A;
@@ -71,65 +60,58 @@ void MessageClient::getOnce()
             pixels[576 * 4 * buf.m_number + i * 4 + 2] = buf.m_argb[i].m_G; // * 4 
             pixels[576 * 4 * buf.m_number + i * 4 + 3] = buf.m_argb[i].m_B;
         }
-        if(!m_finish && buf.m_number >= 700)
+        if (!m_finish && buf.m_number >= 700)
             m_finish = true;
 
     };
 
-    if(m_finish && buf.m_number <= 10) { 
+    if (m_finish && buf.m_number <= 20) {
         // Отправляем запрос только на следующем проходе
         // Так гарантируется корректность что пришел один экран.
-        askToRedraw();
         m_finish = false;
+        askToRedraw();
     }
 
 };
 
-void MessageClient::askToRedraw()
-{
+void MessageClient::askToRedraw() {
     emit pixelsFull();
 }
 
-MessageClient::~MessageClient()
-{
+MessageClient::~MessageClient() {
     close();
 };
 
-void messageAnswerThread()
-{
+void messageAnswerThread() {
 
     try {
         MessageAnswer ma(7777);
         const std::chrono::nanoseconds sleep_time(10);
 
-        while(1) {
-            for(std::uint16_t i = 0; i < globalWidth; ++i) {
+        while (1) {
+            for (std::uint16_t i = 0; i < globalWidth; ++i) {
                 ma.send(i);
                 std::this_thread::sleep_for(sleep_time);
             }
         }
-    }
-    catch(std::string str) {
+    }    catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 };
 
-MessageAnswer::MessageAnswer(std::uint16_t PORT)
-{
+MessageAnswer::MessageAnswer(std::uint16_t PORT) {
     m_PORT = PORT;
 }
 
-void MessageAnswer::send(const std::uint16_t message)
-{
-                 writeDatagram(
-                     (const char *)(&message),
-                     sizeof (std::uint16_t ),
-                     QHostAddress::LocalHost,
-                     m_PORT);
+void MessageAnswer::send(const std::uint16_t message) {
+    writeDatagram(
+            (const char *) (&message),
+            sizeof (std::uint16_t),
+            QHostAddress::LocalHost,
+            m_PORT);
 };
 
-MessageAnswer::~MessageAnswer()
-{
+MessageAnswer::~MessageAnswer() {
     close();
 
 }

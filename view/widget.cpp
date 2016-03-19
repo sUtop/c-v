@@ -2,22 +2,18 @@
 #include "view.h" // Общая память для 2-х потоков
 
 Widget::Widget(QWidget *parent)
-: QGLWidget(parent)
-{
+: QGLWidget(parent) {
     resize(m_width, m_height);
     connect(ms, SIGNAL(pixelsFull()), this, SLOT(updateGL()));
-
 }
 
-void Widget::initializeGL()
-{
+void Widget::initializeGL() {
     m_lastTime = std::time(NULL);
     m_frames = 0;
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-void Widget::resizeGL(int nWidth, int nHeight)
-{
+void Widget::resizeGL(int nWidth, int nHeight) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0, (GLint) nWidth, (GLint) nHeight);
@@ -27,12 +23,11 @@ void Widget::paintGL() // рисование
 {
     // Рассчет фпс
     std::time_t result = std::time(NULL);
-    if(result - m_lastTime > 1) {
+    if (result - m_lastTime > 1) {
         std::cout << "Paint Gl " << (int) m_frames << " FPS \n";
         m_frames = 0;
         m_lastTime = result;
-    }
-    else ++m_frames;
+    } else ++m_frames;
 
     // Отображение
     glClear(GL_COLOR_BUFFER_BIT);

@@ -40,19 +40,17 @@ public slots:
 
 void messageAnswerThread();
 
+/* *\brief MessageAnswer - Класс для отправки запросов на отображение.
+ */
 class MessageAnswer : public QUdpSocket {
-
     quint16 m_PORT;
 
     QHostAddress * m_address;
-
-
 
 public:
     MessageAnswer(std::uint16_t PORT);
 
     void send(const std::uint16_t message);
-    void get();
 
     ~MessageAnswer();
 
