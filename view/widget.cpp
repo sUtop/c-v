@@ -10,7 +10,7 @@ Widget::Widget(QWidget *parent)
 void Widget::initializeGL() {
     m_lastTime = std::time(NULL);
     m_frames = 0;
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 }
 
 void Widget::resizeGL(int nWidth, int nHeight) {

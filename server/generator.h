@@ -37,7 +37,7 @@ struct Line {
 
 class Generator {
     std::mt19937 * m_generator;
-    std::uniform_int_distribution<std::uint8_t> * m_dis;
+    std::uniform_int_distribution<int> * m_dis;
 
     static const int mc_width = 720;
     static const int mc_height = 576;

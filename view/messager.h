@@ -32,8 +32,6 @@ public:
     ~MessageClient();
 signals:
     void pixelsFull();
-public slots:
-    void read();
 
 };
 

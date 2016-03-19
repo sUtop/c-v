@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
         MainApp.exec();
 
 
-    }    catch (std::string str) {
+    } catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 

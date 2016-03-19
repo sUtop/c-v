@@ -34,7 +34,7 @@ MessageSender::MessageSender(std::uint16_t PORT) {
     m_lines = 0;
     m_step = 0;
 
-    msgGenerator = new Generator(0, 0, 254);
+    msgGenerator = new Generator(0, 200, 254);
 
     //!< Bind для получения информации открывает клиент !!
     std::cout << "MessageSender  listening \n";
@@ -119,6 +119,7 @@ MessageClient::MessageClient(std::uint16_t PORT) {
 }
 
 std::uint16_t MessageClient::receive() {
+    waitForReadyRead();
     if (readDatagram((char *) &m_buf, sizeof (std::uint16_t), m_address, &m_PORT) == -1)
         return 0;
     return m_buf;

@@ -13,7 +13,7 @@ void messageClientThread() {
             ms->getOnce();
             std::this_thread::sleep_for(sleep_time);
         };
-    }    catch (std::string str) {
+    } catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 };
@@ -28,25 +28,11 @@ void MessageClient::init() {
 
     std::cout << "bind return " << bind(*m_address, m_PORT) << "\n";
 
-    connect(this, SIGNAL(readyRead()), SLOT(read()));
-
 }
-
-void MessageClient::read() {
-    std::uint16_t buff;
-
-    std::cout << " handshake ! \n";
-
-    readDatagram((char *) &buff, 2, m_address, &m_PORT);
-    //    recvfrom(socetHandler, &buff, 2, 0, (struct sockaddr *) si_other, &slen);
-
-    if (buff != 404) throw (std::string("wtf" + std::to_string(buff)));
-    else std::cout << " Correct handshake ! \n";
-
-};
 
 void MessageClient::getOnce() {
 
+    waitForReadyRead();
     Line buf;
     int i = readDatagram((char *) &buf, sizeof (Line), m_address, &m_PORT);
 
@@ -62,6 +48,7 @@ void MessageClient::getOnce() {
         }
         if (!m_finish && buf.m_number >= 700)
             m_finish = true;
+
 
     };
 
@@ -94,7 +81,7 @@ void messageAnswerThread() {
                 std::this_thread::sleep_for(sleep_time);
             }
         }
-    }    catch (std::string str) {
+    } catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 };

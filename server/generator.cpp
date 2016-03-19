@@ -14,7 +14,7 @@ void Line::clear() {
 
 Generator::Generator(std::uint8_t seed, std::uint8_t min, std::uint8_t max) {
     m_generator = new std::mt19937(seed);
-    m_dis = new std::uniform_int_distribution<std::uint8_t>(min, max);
+    m_dis = new std::uniform_int_distribution<int>(min, max);
 }
 
 std::int8_t Generator::gen() {

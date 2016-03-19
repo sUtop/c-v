@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
             std::this_thread::sleep_for(sleep_time);
         }
 
-    }    catch (std::string str) {
+    } catch (std::string str) {
         std::cout << "catched " << str << "\n";
     }
 
